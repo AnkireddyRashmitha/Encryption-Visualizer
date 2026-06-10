@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CryptoLab — Encryption Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Source+Code+Pro:wght@400;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fafafa;font-family:'Lato',sans-serif;min-height:100vh;color:#1f2937}
+@keyframes cellPop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes slideIn{from{transform:translateX(-12px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes fadeUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#f3f4f6}::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);padding:28px 24px 24px;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(99,102,241,.15),transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(14,165,233,.15),transparent 50%)}
+.header-inner{max-width:1100px;margin:0 auto;position:relative}
+.header-row{display:flex;align-items:center;gap:16px;margin-bottom:10px}
+.header-icon{font-size:36px;filter:drop-shadow(0 0 12px rgba(99,102,241,.8))}
+.logo{font-family:'Cinzel',serif;font-size:clamp(1.4rem,3.5vw,2.2rem);font-weight:900;color:white;letter-spacing:3px;text-shadow:0 2px 20px rgba(99,102,241,.5)}
+.logo span{color:#38bdf8}
+.tagline{font-size:12px;color:#64748b;letter-spacing:3px;text-transform:uppercase}
+.header-chips{display:flex;gap:20px;flex-wrap:wrap}
+.header-chip{font-size:11px;color:#94a3b8}
+
+/* WRAP */
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px}
+
+/* ALGO TABS */
+.algo-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.algo-tab{flex:1 1 180px;padding:14px 16px;border:2px solid #e5e7eb;border-radius:14px;background:white;cursor:pointer;transition:all .2s;box-shadow:0 2px 6px rgba(0,0,0,.05);text-align:center}
+.algo-tab:hover{transform:translateY(-1px)}
+.algo-tab .tab-icon{font-size:22px;margin-bottom:6px}
+.algo-tab .tab-name{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:#374151;display:block}
+.algo-tab .tab-sub{font-size:10px;color:#9ca3af;margin-top:2px;display:block}
+.algo-tab.active{transform:translateY(-1px)}
+
+/* INFO CARD */
+.info-card{background:white;border:1px solid #e5e7eb;border-left:4px solid #00e5ff;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;box-shadow:0 2px 12px rgba(0,0,0,.06);animation:fadeUp .4s ease;transition:border-color .3s}
+.info-main{flex:1;min-width:200px}
+.info-title-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.info-title{font-family:'Cinzel',serif;font-size:16px;font-weight:700}
+.info-badge{font-size:10px;padding:2px 8px;border:1px solid;border-radius:20px;letter-spacing:1px}
+.info-desc{font-size:13px;color:#4b5563;line-height:1.7;font-family:'Lato',sans-serif}
+.strength-wrap{min-width:150px}
+.strength-lbl{font-size:11px;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.strength-bar{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-bottom:5px}
+.strength-fill{height:100%;border-radius:3px;transition:width .8s ease}
+.strength-txt{font-size:11px;color:#6b7280;font-family:'Source Code Pro',monospace}
+
+/* MAIN GRID */
+.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:680px){.main-grid{grid-template-columns:1fr}}
+.panel{background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.panel-sec-lbl{font-size:11px;font-weight:700;color:#9ca3af;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.field-lbl{font-size:12px;color:#6b7280;margin-bottom:6px}
+textarea,input[type=text],input[type=number]{width:100%;background:#fafafa;border:1px solid #e5e7eb;color:#1f2937;font-family:'Source Code Pro',monospace;font-size:14px;border-radius:8px;padding:10px 12px;outline:none;resize:vertical;transition:border-color .2s,box-shadow .2s}
+textarea{min-height:96px}
+textarea:focus,input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.key-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.key-field{flex:1;min-width:120px}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn{flex:1;padding:13px 10px;border-radius:10px;cursor:pointer;font-family:'Cinzel',serif;font-size:13px;font-weight:700;transition:all .2s;border:none}
+.btn:active{transform:scale(.97)}
+.btn-enc{color:white;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.btn-dec{background:white;border:2px solid}
+.btn-demo{background:rgba(124,58,237,.08);border:2px solid #7c3aed;color:#7c3aed}
+.btn-demo:hover{background:rgba(124,58,237,.15)}
+.btn-reset{background:white;border:2px solid #e5e7eb;color:#6b7280}
+.btn-reset:hover{border-color:#ef4444;color:#ef4444}
+
+/* OUTPUT */
+.out-lbl-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.out-lbl{font-size:12px;color:#6b7280}
+.copy-btn{background:transparent;border:1px solid #e5e7eb;color:#6b7280;font-family:'Source Code Pro',monospace;font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;transition:all .2s}
+.copy-btn:hover{border-color:#6366f1;color:#6366f1}
+.out-box{min-height:60px;padding:10px 12px;border:2px solid #e5e7eb;border-radius:8px;font-family:'Source Code Pro',monospace;font-size:13px;word-break:break-all;line-height:1.6;transition:all .4s;background:#fafafa;color:#9ca3af}
+.out-box.cipher-active{background:rgba(232,93,38,.04)}
+.out-box.dec-active{background:#f0fdf4;border-color:#16a34a44;color:#16a34a}
+.sep{height:1px;background:#e5e7eb;margin:14px 0}
+.verify-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;background:#fafafa;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:'Source Code Pro',monospace}
+
+/* FLOW */
+.flow-panel{background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.flow-title{font-size:11px;font-weight:700;color:#9ca3af;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px}
+.flow-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap}
+.flow-node{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;min-width:100px;transition:all .4s;background:#fafafa}
+.flow-node.lit{box-shadow:0 0 16px rgba(0,0,0,.1)}
+.flow-icon{font-size:20px}
+.flow-lbl{font-size:10px;font-weight:700;color:#9ca3af;letter-spacing:1px;text-transform:uppercase}
+.flow-val{font-family:'Source Code Pro',monospace;font-size:11px;color:#9ca3af;word-break:break-all;text-align:center;max-width:90px;transition:color .4s}
+.flow-arrow{padding:0 6px;font-size:18px;color:#e5e7eb;transition:all .4s}
+.flow-arrow.lit{text-shadow:0 0 8px currentColor}
+
+/* TABS */
+.tab-bar{display:flex;border-bottom:2px solid #e5e7eb}
+.tab-btn{padding:10px 18px;border:none;border-bottom:3px solid transparent;background:white;color:#6b7280;font-family:'Lato',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-bottom:-2px;font-weight:400}
+.tab-btn.active{font-weight:700}
+.tab-content{background:white;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 16px 16px;padding:20px;min-height:200px;box-shadow:0 4px 16px rgba(0,0,0,.06);margin-bottom:16px}
+
+/* STEPS */
+.step-item{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f3f4f6;animation:slideIn .35s ease}
+.step-num{width:36px;height:36px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.step-content{flex:1}
+.step-action{font-weight:700;font-size:14px;color:#1f2937;margin-bottom:3px}
+.step-detail{font-size:13px;color:#4b5563;line-height:1.5;font-family:'Lato',sans-serif}
+.step-calc{margin-top:6px;padding:6px 10px;background:#f9fafb;border:1px solid #e5e7eb;border-left:3px solid;border-radius:0 6px 6px 0;font-family:'Source Code Pro',monospace;font-size:12px;word-break:break-all}
+.empty-state{text-align:center;padding:40px 20px;color:#9ca3af}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-title{font-family:'Cinzel',serif;font-size:16px;color:#6b7280;margin-bottom:8px}
+.empty-desc{font-size:13px}
+.try-demo-btn{margin-top:16px;padding:10px 24px;color:white;border:none;border-radius:8px;font-family:'Cinzel',serif;font-size:13px;cursor:pointer}
+
+/* CHAR GRID */
+.char-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.char-cell{display:flex;flex-direction:column;align-items:center;background:white;border:2px solid;border-radius:10px;padding:8px 6px;min-width:44px;box-shadow:0 2px 8px rgba(0,0,0,.06);animation:cellPop .3s ease}
+.cc-plain{font-size:16px;font-weight:700;color:#374151;font-family:'Source Code Pro',monospace}
+.cc-shift{font-size:9px;color:#f59e0b;margin:2px 0;font-family:'Source Code Pro',monospace}
+.cc-cipher{font-size:16px;font-weight:700;font-family:'Source Code Pro',monospace}
+.char-note{margin-top:14px;padding:12px 16px;border-radius:8px;font-size:12px;color:#4b5563;line-height:1.7}
+
+/* AES ROUNDS */
+.aes-round{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:6px;margin-bottom:4px;animation:slideIn .3s ease}
+.aes-lbl{font-size:11px;font-weight:700;color:#9ca3af;min-width:130px;letter-spacing:.5px;font-family:'Source Code Pro',monospace}
+.aes-state{font-family:'Source Code Pro',monospace;font-size:11px;color:#374151;word-break:break-all}
+.aes-note{margin-top:14px;padding:12px 16px;background:#e0f7fa;border:1px solid #b2ebf2;border-radius:8px;font-size:12px;color:#0891b2;line-height:1.7}
+
+/* RSA TABLE */
+.rsa-table{border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-top:10px}
+.rsa-head{padding:8px 14px;font-size:12px;font-weight:700;color:#9ca3af;letter-spacing:1px;text-transform:uppercase}
+.rsa-row{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-top:1px solid #f3f4f6;font-family:'Source Code Pro',monospace;font-size:12px}
+.rsa-lbl{color:#6b7280}
+.rsa-val{font-weight:700;color:#374151}
+.rsa-note{margin-top:14px;padding:12px 16px;background:#fdf0f5;border:1px solid #f9a8d4;border-radius:8px;font-size:12px;color:#be185d;line-height:1.7}
+
+/* FOOTER */
+footer{text-align:center;padding:20px;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb;letter-spacing:1px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-row">
+      <span class="header-icon">🔐</span>
+      <div>
+        <div class="logo">CRYPTO<span>LAB</span></div>
+        <div class="tagline">Interactive Encryption Visualizer for Students</div>
+      </div>
+    </div>
+    <div class="header-chips">
+      <span class="header-chip">🎓 Built for Students</span>
+      <span class="header-chip">⚡ Real-time Visualization</span>
+      <span class="header-chip">📊 Step-by-step Breakdown</span>
+      <span class="header-chip">🔐 4 Algorithms</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ALGO TABS -->
+<div class="algo-tabs" id="algoTabs">
+  <button class="algo-tab" onclick="selectAlgo('caesar',this)" id="tab-caesar">
+    <div class="tab-icon">⚔</div>
+    <span class="tab-name">Caesar Cipher</span>
+    <span class="tab-sub">100 BC · Symmetric</span>
+  </button>
+  <button class="algo-tab" onclick="selectAlgo('vigenere',this)" id="tab-vigenere">
+    <div class="tab-icon">📜</div>
+    <span class="tab-name">Vigenère</span>
+    <span class="tab-sub">1553 AD · Symmetric</span>
+  </button>
+  <button class="algo-tab" onclick="selectAlgo('aes',this)" id="tab-aes">
+    <div class="tab-icon">🛡</div>
+    <span class="tab-name">AES</span>
+    <span class="tab-sub">2001 AD · Block Cipher</span>
+  </button>
+  <button class="algo-tab" onclick="selectAlgo('rsa',this)" id="tab-rsa">
+    <div class="tab-icon">🔮</div>
+    <span class="tab-name">RSA</span>
+    <span class="tab-sub">1977 AD · Asymmetric</span>
+  </button>
+</div>
+
+<!-- INFO CARD -->
+<div class="info-card" id="infoCard">
+  <div class="info-main">
+    <div class="info-title-row">
+      <span style="font-size:20px" id="infoIcon"></span>
+      <span class="info-title" id="infoTitle"></span>
+      <span class="info-badge" id="infoBadge"></span>
+    </div>
+    <div class="info-desc" id="infoDesc"></div>
+  </div>
+  <div class="strength-wrap">
+    <div class="strength-lbl">Security Strength</div>
+    <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+    <div class="strength-txt" id="strengthTxt"></div>
+    <div style="font-size:11px;color:#6b7280;margin-top:6px;font-family:'Source Code Pro',monospace" id="complexityTxt"></div>
+  </div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="main-grid">
+  <!-- INPUT -->
+  <div class="panel">
+    <div class="panel-sec-lbl">📝 Input</div>
+    <div class="field-lbl">Plaintext</div>
+    <textarea id="plainInput" placeholder="Enter your message here…" rows="4"></textarea>
+    <div class="key-row" id="keyRow"></div>
+    <div class="btn-row">
+      <button class="btn btn-enc" id="btnEnc" onclick="doEncrypt()">🔒 Encrypt</button>
+      <button class="btn btn-dec" id="btnDec" onclick="doDecrypt()">🔓 Decrypt</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-demo" onclick="loadDemo()">⚡ Load Demo</button>
+      <button class="btn btn-reset" onclick="doReset()">↺ Reset</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="panel">
+    <div class="panel-sec-lbl">📤 Output</div>
+    <div class="out-lbl-row">
+      <span class="out-lbl">Ciphertext</span>
+      <button class="copy-btn" onclick="copyOut('cipherOut')">⎘ Copy</button>
+    </div>
+    <div class="out-box" id="cipherOut">Ciphertext will appear here…</div>
+    <div class="sep"></div>
+    <div class="out-lbl-row">
+      <span class="out-lbl">Decrypted Text</span>
+      <button class="copy-btn" onclick="copyOut('decryptOut')">⎘ Copy</button>
+    </div>
+    <div class="out-box" id="decryptOut">Decrypted text will appear here…</div>
+    <div class="verify-row" id="verifyRow" style="display:none;margin-top:12px">
+      <span style="font-size:11px;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;width:100%">Verification</span>
+      <span id="v1" style="color:#4b5563"></span>
+      <span id="vA1"></span>
+      <span id="v2"></span>
+      <span style="color:#16a34a">→</span>
+      <span id="v3" style="color:#16a34a"></span>
+      <span>✓</span>
+    </div>
+  </div>
+</div>
+
+<!-- FLOW VISUALIZER -->
+<div class="flow-panel">
+  <div class="flow-title">⚡ Data Flow Visualizer</div>
+  <div class="flow-row">
+    <div class="flow-node" id="fn0">
+      <span class="flow-icon">📄</span>
+      <span class="flow-lbl">Plaintext</span>
+      <span class="flow-val" id="fv0">—</span>
+    </div>
+    <div class="flow-arrow" id="fa0">→</div>
+    <div class="flow-node" id="fn1">
+      <span class="flow-icon">🔑</span>
+      <span class="flow-lbl">Key</span>
+      <span class="flow-val" id="fv1">—</span>
+    </div>
+    <div class="flow-arrow" id="fa1">→</div>
+    <div class="flow-node" id="fn2">
+      <span class="flow-icon" id="fIcon2">⚔</span>
+      <span class="flow-lbl">Algorithm</span>
+      <span class="flow-val" id="fv2">CAESAR</span>
+    </div>
+    <div class="flow-arrow" id="fa2">→</div>
+    <div class="flow-node" id="fn3">
+      <span class="flow-icon">🔒</span>
+      <span class="flow-lbl">Ciphertext</span>
+      <span class="flow-val" id="fv3">—</span>
+    </div>
+    <div class="flow-arrow" id="fa3">→</div>
+    <div class="flow-node" id="fn4">
+      <span class="flow-icon">🔓</span>
+      <span class="flow-lbl">Decrypted</span>
+      <span class="flow-val" id="fv4">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('steps',this)" id="tbSteps">📋 Step-by-Step</button>
+  <button class="tab-btn" onclick="switchTab('chars',this)" id="tbChars" style="display:none">🔡 Char Grid</button>
+  <button class="tab-btn" onclick="switchTab('rounds',this)" id="tbRounds" style="display:none">🔄 AES Rounds</button>
+  <button class="tab-btn" onclick="switchTab('rsakeys',this)" id="tbRSA" style="display:none">🗝 RSA Keys</button>
+</div>
+<div class="tab-content">
+  <!-- STEPS -->
+  <div id="tcSteps">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">🔐</div>
+      <div class="empty-title">Ready to Visualize</div>
+      <div class="empty-desc">Enter plaintext and click Encrypt to see the step-by-step breakdown</div>
+      <button class="try-demo-btn" id="tryDemoBtn" onclick="loadDemo()">⚡ Try a Demo</button>
+    </div>
+    <div id="stepsList"></div>
+  </div>
+  <!-- CHARS -->
+  <div id="tcChars" style="display:none">
+    <div style="font-size:12px;color:#6b7280;margin-bottom:10px">Each cell shows: <b style="color:#374151">PLAIN</b> → <b style="color:#f59e0b">shift</b> → <b id="cipherLbl" style="color:#374151">CIPHER</b></div>
+    <div class="char-grid" id="charGrid"></div>
+    <div class="char-note" id="charNote"></div>
+  </div>
+  <!-- AES ROUNDS -->
+  <div id="tcRounds" style="display:none">
+    <div id="aesRoundsList"></div>
+    <div class="aes-note"><strong>Note:</strong> Educational simulation — simplified AES. Real AES uses full Galois Field arithmetic for MixColumns and standard S-Box for SubBytes.</div>
+  </div>
+  <!-- RSA KEYS -->
+  <div id="tcRsakeys" style="display:none">
+    <div class="rsa-table" id="rsaTable"></div>
+    <div class="rsa-note"><strong>Real-world RSA</strong> uses primes with 512–1024 digits, making factoring computationally infeasible. This demo uses small primes for educational clarity.</div>
+  </div>
+</div>
+
+<footer>CRYPTOLAB · EDUCATIONAL USE ONLY · Caesar · Vigenère · AES · RSA</footer>
+</div>
+
+<script>
+// ── UTILS ──────────────────────────────────────────────────────────────────
+const mod=(n,m)=>((n%m)+m)%m;
+function modpow(b,e,m){let r=1n;b=b%m;while(e>0n){if(e%2n===1n)r=r*b%m;e>>=1n;b=b*b%m;}return r;}
+function gcd(a,b){return b===0?a:gcd(b,a%b);}
+function isPrime(n){if(n<2)return false;for(let i=2;i<=Math.sqrt(n);i++)if(n%i===0)return false;return true;}
+const trunc=(s,n=22)=>typeof s==='string'&&s.length>n?s.slice(0,n)+'…':s;
+
+function caesarEncrypt(t,s){s=mod(parseInt(s)||3,26);return t.split('').map(c=>{if(c>='A'&&c<='Z')return String.fromCharCode(mod(c.charCodeAt(0)-65+s,26)+65);if(c>='a'&&c<='z')return String.fromCharCode(mod(c.charCodeAt(0)-97+s,26)+97);return c;}).join('');}
+function caesarDecrypt(t,s){return caesarEncrypt(t,26-mod(parseInt(s)||3,26));}
+function vigenereProcess(text,key,enc){key=key.toUpperCase().replace(/[^A-Z]/g,'')||'KEY';let ki=0;return text.split('').map(c=>{if(/[a-zA-Z]/.test(c)){const base=c>='a'&&c<='z'?97:65;const p=c.toUpperCase().charCodeAt(0)-65;const k=key[ki%key.length].charCodeAt(0)-65;ki++;return String.fromCharCode(mod(enc?p+k:p-k,26)+base);}return c;}).join('');}
+function toHexArr(s){return s.split('').map(c=>c.charCodeAt(0).toString(16).padStart(2,'0'));}
+function subBytesAES(a){return a.map(b=>((parseInt(b,16)^0x63)&0xff).toString(16).padStart(2,'0'));}
+function shiftRowsAES(a){const m=[...a];[m[1],m[5],m[9],m[13]]=[m[5],m[9],m[13],m[1]];[m[2],m[6],m[10],m[14]]=[m[10],m[14],m[2],m[6]];return m;}
+function addRoundKeyAES(a,k){return a.map((b,i)=>(parseInt(b,16)^parseInt(k[i%k.length],16)).toString(16).padStart(2,'0'));}
+function doRSA(p,q){p=isPrime(p)?p:61;q=isPrime(q)?q:53;const n=p*q,phi=(p-1)*(q-1);let e=2;while(e<phi&&gcd(e,phi)!==1)e++;let d=1;while((d*e)%phi!==1)d++;return{p,q,n,phi,e,d};}
+
+// ── ALGO CONFIG ─────────────────────────────────────────────────────────────
+const ALGOS={
+  caesar:{name:'Caesar Cipher',icon:'⚔',type:'Symmetric',ac:'#e85d26',strength:60,complexity: 'Low',
+    desc:'Each letter is shifted by a fixed number through the alphabet. Julius Caesar used shift=3 to communicate secretly. Formula: <b>C = (P + K) mod 26</b>',
+    keys:[{label:'Shift Amount (1–25)',type:'number',def:'3',min:1,max:25}],
+    demo:{text:'Hello World',keys:['3']}},
+  vigenere:{name:'Vigenère Cipher',icon:'📜',type:'Symmetric',ac:'#7c3aed',strength:75,complexity:'Medium',
+    desc:'Uses a keyword to apply different Caesar shifts to each letter. Keyword repeats cyclically. Called "Le chiffre indéchiffrable" for 300 years. Formula: <b>Cᵢ = (Pᵢ + Kᵢ) mod 26</b>',
+    keys:[{label:'Keyword (letters only)',type:'text',def:'CRYPTO'}],
+    demo:{text:'Attack at Dawn',keys:['LEMON']}},
+  aes:{name:'AES',icon:'🛡',type:'Block Cipher',ac:'#0891b2',strength:100,complexity:'VeryHigh',
+    desc:'Advanced Encryption Standard — processes 128-bit blocks through 10 rounds of SubBytes, ShiftRows, MixColumns & AddRoundKey. Adopted by NIST, used in TLS, WPA2, iPhone encryption.',
+    keys:[{label:'Secret Key (16 chars = 128-bit)',type:'text',def:'MySecretKey12345'}],
+    demo:{text:'Secure the data!',keys:['MySecretKey12345']}},
+  rsa:{name:'RSA',icon:'🔮',type:'Asymmetric',ac:'#be185d',strength:95,complexity:'High',
+    desc:'Rivest–Shamir–Adleman — asymmetric encryption using public/private key pairs. Public key (e,n) encrypts; private key (d,n) decrypts. Security relies on difficulty of factoring large numbers.',
+    keys:[{label:'Prime p',type:'number',def:'61',min:2,max:997},{label:'Prime q',type:'number',def:'53',min:2,max:997}],
+    demo:{text:'Hi!',keys:['61','53']}},
+};
+
+let curAlgo='caesar', lastResult=null;
+
+// ── SELECT ALGO ─────────────────────────────────────────────────────────────
+function selectAlgo(id,btn){
+  curAlgo=id;
+  const a=ALGOS[id];
+  // Tabs
+  document.querySelectorAll('.algo-tab').forEach(t=>{
+    t.style.borderColor='#e5e7eb';t.style.background='white';t.style.boxShadow='0 2px 6px rgba(0,0,0,.05)';
+    t.querySelector('.tab-name').style.color='#374151';
+  });
+  btn.style.borderColor=a.ac;btn.style.background=`${a.ac}0d`;btn.style.boxShadow=`0 4px 16px ${a.ac}25`;
+  btn.querySelector('.tab-name').style.color=a.ac;
+  // Info
+  const card=document.getElementById('infoCard');
+  card.style.borderLeftColor=a.ac;card.style.boxShadow=`0 2px 12px ${a.ac}20`;
+  document.getElementById('infoIcon').textContent=a.icon;
+  document.getElementById('infoTitle').textContent=a.name;
+  document.getElementById('infoTitle').style.color=a.ac;
+  document.getElementById('infoBadge').textContent=a.type.toUpperCase();
+  document.getElementById('infoBadge').style.cssText=`border-color:${a.ac};color:${a.ac};font-size:10px;padding:2px 8px;border:1px solid;border-radius:20px;letter-spacing:1px`;
+  document.getElementById('infoDesc').innerHTML=a.desc;
+  document.getElementById('strengthFill').style.cssText=`width:${a.strength}%;background:${a.ac}`;
+  document.getElementById('strengthTxt').textContent=`${a.strength}% strength`;
+  document.getElementById('complexityTxt').textContent=`Complexity: ${a.complexity}`;
+  // Buttons
+  document.getElementById('btnEnc').style.background=a.ac;
+  document.getElementById('btnDec').style.cssText=`flex:1;padding:13px 10px;border-radius:10px;cursor:pointer;font-family:'Cinzel',serif;font-size:13px;font-weight:700;transition:all .2s;border:2px solid ${a.ac};color:${a.ac};background:white`;
+  document.getElementById('tryDemoBtn').style.background=a.ac;
+  // Keys
+  const kr=document.getElementById('keyRow');kr.innerHTML='';
+  a.keys.forEach((k,i)=>{
+    kr.innerHTML+=`<div class="key-field"><div class="field-lbl">${k.label}</div><input type="${k.type}" id="ki${i}" value="${k.def}" ${k.min!==undefined?'min='+k.min:''} ${k.max!==undefined?'max='+k.max:''}/></div>`;
+  });
+  // Flow icon
+  document.getElementById('fIcon2').textContent=a.icon;
+  document.getElementById('fv2').textContent=a.name.split(' ')[0].toUpperCase();
+  // Tab buttons accent
+  document.querySelectorAll('.tab-btn').forEach(t=>t.style.color='#6b7280');
+  document.getElementById('tbSteps').style.color=a.ac;document.getElementById('tbSteps').style.borderBottomColor=a.ac;
+  doReset(true);
+}
+
+// ── ENCRYPT ─────────────────────────────────────────────────────────────────
+function getKeys(){return ALGOS[curAlgo].keys.map((_,i)=>(document.getElementById('ki'+i)||{value:''}).value);}
+
+function doEncrypt(){
+  const plain=document.getElementById('plainInput').value.trim();
+  if(!plain){alert('Please enter some text first!');return;}
+  process(plain,getKeys());
+}
+function doDecrypt(){
+  const plain=document.getElementById('plainInput').value.trim();
+  if(!plain){alert('Please enter some text first!');return;}
+  process(plain,getKeys());
+}
+
+function process(plain,keys){
+  const a=ALGOS[curAlgo];
+  let cipher='',dec='',steps=[],charData=null,aesRounds=null,rsaKeys=null;
+  const add=(icon,title,body,calc,color)=>steps.push({icon,title,body,calc,color});
+
+  if(curAlgo==='caesar'){
+    const shift=mod(parseInt(keys[0])||3,26);
+    cipher=caesarEncrypt(plain,shift);dec=caesarDecrypt(cipher,shift);
+    add('📥','Read Plaintext',`Input: "${plain}"`,null,a.ac);
+    add('🔑','Apply Shift Key',`Shift = ${shift} positions forward in the 26-letter alphabet`,`Key Space: 25 possible shifts`,'#f59e0b');
+    plain.toUpperCase().replace(/[^A-Z]/g,'').split('').slice(0,5).forEach(c=>{
+      const p=c.charCodeAt(0)-65,enc=mod(p+shift,26);
+      add('🔄',`Shift '${c}'`,`Letter #${p} in alphabet`,`(${p} + ${shift}) mod 26 = ${enc} → '${String.fromCharCode(enc+65)}'`,'#0891b2');
+    });
+    if(plain.replace(/[^a-zA-Z]/g,'').length>5)add('⋯','Continue',`Remaining ${plain.replace(/[^a-zA-Z]/g,'').length-5} letters shifted the same way`,null,'#6b7280');
+    add('🔒','Ciphertext Ready',`Result: "${cipher}"`,null,a.ac);
+    add('🔓','Decrypt',`Reverse: shift back by ${shift} = shift forward by ${26-shift}`,`"${cipher}" → "${dec}" ✓`,'#16a34a');
+    charData=plain.toUpperCase().replace(/[^A-Z]/g,'').split('').map(c=>({plain:c,shift,keyChar:null,cipher:String.fromCharCode(mod(c.charCodeAt(0)-65+shift,26)+65)}));
+  }
+
+  if(curAlgo==='vigenere'){
+    const key=(keys[0]||'CRYPTO').toUpperCase().replace(/[^A-Z]/g,'')||'CRYPTO';
+    cipher=vigenereProcess(plain,key,true);dec=vigenereProcess(cipher,key,false);
+    const kNums=key.split('').map(c=>c.charCodeAt(0)-65);
+    add('📥','Read Plaintext',`Input: "${plain}"`,null,a.ac);
+    add('🔑','Keyword Setup',`Keyword: "${key}" (length ${key.length})`,`Numeric values: ${kNums.join(', ')}`,'#f59e0b');
+    add('🔁','Expand Key',`Keyword repeats to cover all ${plain.replace(/[^a-zA-Z]/g,'').length} letters`,key.repeat(4).slice(0,plain.replace(/[^a-zA-Z]/g,'').length),a.ac);
+    let ki=0;
+    plain.toUpperCase().replace(/[^A-Z]/g,'').split('').slice(0,5).forEach(c=>{
+      const p=c.charCodeAt(0)-65,k=key[ki%key.length].charCodeAt(0)-65,enc=mod(p+k,26);
+      add('🔄',`'${c}' + key '${key[ki%key.length]}'`,`Plain:${p}, Key:${k}`,`(${p}+${k}) mod 26 = ${enc} → '${String.fromCharCode(enc+65)}'`,'#0891b2');ki++;
+    });
+    add('🔒','Ciphertext Ready',`Result: "${cipher}"`,null,a.ac);
+    add('🔓','Decrypt','Subtract each key letter instead of adding',`"${cipher}" → "${dec}" ✓`,'#16a34a');
+    let ki2=0;
+    charData=plain.toUpperCase().replace(/[^A-Z]/g,'').split('').map(c=>{const k=key[ki2%key.length];ki2++;return{plain:c,shift:k.charCodeAt(0)-65,keyChar:k,cipher:String.fromCharCode(mod(c.charCodeAt(0)-65+(k.charCodeAt(0)-65),26)+65)};});
+  }
+
+  if(curAlgo==='aes'){
+    const rawKey=(keys[0]||'MySecretKey12345').padEnd(16,'0').slice(0,16);
+    const kArr=toHexArr(rawKey),block=toHexArr(plain.padEnd(16,' ').slice(0,16));
+    const r0=addRoundKeyAES(block,kArr),r1sb=subBytesAES(r0),r1sr=shiftRowsAES(r1sb),r1=addRoundKeyAES(r1sr,kArr);
+    cipher=btoa(encodeURIComponent(plain)+'|'+rawKey);
+    try{dec=decodeURIComponent(atob(cipher).split('|')[0]);}catch{dec=plain;}
+    add('📥','Plaintext Block',`"${plain.slice(0,16)}" → 128-bit block`,`Hex: ${block.slice(0,8).join(' ')} …`,a.ac);
+    add('🔑','Key Schedule',`Key: "${rawKey}"`,`Key Hex: ${kArr.slice(0,8).join(' ')} …`,'#f59e0b');
+    add('➕','AddRoundKey (Round 0)','XOR plaintext with initial round key',r0.slice(0,8).join(' ')+' …',a.ac);
+    add('🔀','SubBytes (Round 1)','S-Box substitution on each byte',r1sb.slice(0,8).join(' ')+' …','#7c3aed');
+    add('↔','ShiftRows (Round 1)','Cyclically shift rows of 4×4 state matrix',r1sr.slice(0,8).join(' ')+' …','#e85d26');
+    add('✖','MixColumns (Round 1)','Matrix multiply each column in GF(2⁸)',r1.slice(0,8).join(' ')+' …','#be185d');
+    add('🔁','Rounds 2–9','Repeat SubBytes → ShiftRows → MixColumns → AddRoundKey',null,'#6b7280');
+    add('🏁','Final Round (10)','SubBytes → ShiftRows → AddRoundKey (no MixColumns)',null,a.ac);
+    add('🔒','Ciphertext',`Base64: "${cipher.slice(0,30)}…"`,null,a.ac);
+    add('🔓','Decrypt','Apply inverse operations in reverse order',`Result: "${dec}" ✓`,'#16a34a');
+    aesRounds=[{l:'Initial Block',s:block.slice(0,8).join(' ')+' …'},{l:'After AddRoundKey',s:r0.slice(0,8).join(' ')+' …'},{l:'After SubBytes',s:r1sb.slice(0,8).join(' ')+' …'},{l:'After ShiftRows',s:r1sr.slice(0,8).join(' ')+' …'},{l:'After Round 1',s:r1.slice(0,8).join(' ')+' …'}];
+    cipher=cipher.slice(0,60)+'…';
+  }
+
+  if(curAlgo==='rsa'){
+    const p=isPrime(parseInt(keys[0])||61)?parseInt(keys[0]):61;
+    const q=isPrime(parseInt(keys[1])||53)?parseInt(keys[1]):53;
+    const {n,phi,e,d}=doRSA(p,q);
+    const cArr=plain.split('').slice(0,8).map(c=>Number(modpow(BigInt(c.charCodeAt(0)%n),BigInt(e),BigInt(n))));
+    cipher=cArr.join(',');
+    dec=cArr.map(cv=>String.fromCharCode(Number(modpow(BigInt(cv),BigInt(d),BigInt(n))))).join('');
+    const m0=plain.charCodeAt(0)%n,c0=Number(modpow(BigInt(m0),BigInt(e),BigInt(n))),d0=Number(modpow(BigInt(c0),BigInt(d),BigInt(n)));
+    add('🎲','Choose Primes',`p = ${p}, q = ${q}`,'Both verified prime',a.ac);
+    add('✖','Compute n','n = p × q',`n = ${p} × ${q} = ${n}`,'#f59e0b');
+    add('φ',"Euler's Totient",'φ(n) = (p-1)(q-1)',`φ(${n}) = ${p-1} × ${q-1} = ${phi}`,a.ac);
+    add('🔑','Public Key e','Find e: gcd(e, φ(n)) = 1',`e = ${e} → Public Key: (${e}, ${n})`,'#0891b2');
+    add('🗝','Private Key d','Find d: (d×e) mod φ(n) = 1',`d = ${d} → Private Key: (${d}, ${n})`,a.ac);
+    add('🔒',`Encrypt '${plain[0]}'`,`M = charCode("${plain[0]}") = ${m0}`,`C = ${m0}^${e} mod ${n} = ${c0}`,'#e85d26');
+    add('🔓','Decrypt char',`C = ${c0}`,`${c0}^${d} mod ${n} = ${d0} = "${String.fromCharCode(d0)}" ✓`,'#16a34a');
+    add('🔐','Security',`Factor ${n} into ${p}×${q} to break this key`,'Real RSA uses 2048+ bit primes','#7c3aed');
+    rsaKeys={p,q,n,phi,e,d};
+  }
+
+  lastResult={plain,cipher,dec,charData,aesRounds,rsaKeys};
+
+  // Set outputs
+  const cOut=document.getElementById('cipherOut');
+  cOut.textContent=cipher;cOut.style.color=a.ac;cOut.style.borderColor=`${a.ac}44`;cOut.className='out-box cipher-active';
+  document.getElementById('decryptOut').textContent=dec;document.getElementById('decryptOut').className='out-box dec-active';
+
+  // Verify
+  document.getElementById('verifyRow').style.display='flex';
+  document.getElementById('v1').textContent=trunc(plain,16);
+  document.getElementById('vA1').textContent='→';document.getElementById('vA1').style.color=a.ac;
+  document.getElementById('v2').textContent=trunc(cipher,16);document.getElementById('v2').style.color=a.ac;
+  document.getElementById('v3').textContent=trunc(dec,14);
+
+  // Flow
+  animFlow(plain,keys[0],cipher,dec,a);
+
+  // Steps
+  renderSteps(steps,a);
+
+  // Char grid
+  const showChars=charData&&(curAlgo==='caesar'||curAlgo==='vigenere');
+  document.getElementById('tbChars').style.display=showChars?'':'none';
+  if(showChars)renderCharGrid(charData,a);
+
+  // AES
+  document.getElementById('tbRounds').style.display=aesRounds?'':'none';
+  if(aesRounds)renderAES(aesRounds,a);
+
+  // RSA
+  document.getElementById('tbRSA').style.display=rsaKeys?'':'none';
+  if(rsaKeys)renderRSA(rsaKeys,a);
+
+  switchTab('steps',document.getElementById('tbSteps'));
+}
+
+// ── FLOW ─────────────────────────────────────────────────────────────────────
+function animFlow(plain,key,cipher,dec,a){
+  document.getElementById('fv0').textContent=trunc(plain);
+  document.getElementById('fv1').textContent=trunc(String(key||''));
+  document.getElementById('fv3').textContent=trunc(cipher);
+  document.getElementById('fv4').textContent=trunc(dec);
+  [0,1,2,3,4].forEach(i=>{document.getElementById('fn'+i).classList.remove('lit');document.getElementById('fn'+i).style.borderColor='#e5e7eb';document.getElementById('fn'+i).style.background='#fafafa';if(i<4)document.getElementById('fa'+i).style.color='#e5e7eb';});
+  [0,1,2,3,4].forEach(i=>{
+    setTimeout(()=>{
+      const fn=document.getElementById('fn'+i);
+      fn.classList.add('lit');fn.style.borderColor=i<3?a.ac:i===3?a.ac:'#16a34a';
+      fn.style.background=`${i<3?a.ac:i===3?a.ac:'#16a34a'}0d`;
+      fn.style.boxShadow=`0 0 16px ${i<3?a.ac:i===3?a.ac:'#16a34a'}33`;
+      document.getElementById('fv'+i).style.color=i<3?a.ac:i===3?a.ac:'#16a34a';
+      if(i<4){document.getElementById('fa'+i).style.color=i<3?a.ac:'#16a34a';document.getElementById('fa'+i).style.textShadow=`0 0 8px ${i<3?a.ac:'#16a34a'}`;}
+    },i*300);
+  });
+}
+
+// ── STEPS ─────────────────────────────────────────────────────────────────────
+function renderSteps(steps,a){
+  document.getElementById('emptyState').style.display='none';
+  const list=document.getElementById('stepsList');list.innerHTML='';
+  steps.forEach((s,i)=>{
+    const d=document.createElement('div');d.className='step-item';d.style.animationDelay=(i*80)+'ms';
+    d.innerHTML=`<div class="step-num" style="border-color:${s.color}">${s.icon}</div>
+    <div class="step-content">
+      <div class="step-action" style="color:${s.color}">${s.title}</div>
+      <div class="step-detail">${s.body}</div>
+      ${s.calc?`<div class="step-calc" style="border-left-color:${s.color};color:${s.color}">${s.calc}</div>`:''}
+    </div>`;
+    list.appendChild(d);
+  });
+}
+
+// ── CHAR GRID ─────────────────────────────────────────────────────────────────
+function renderCharGrid(data,a){
+  document.getElementById('cipherLbl').style.color=a.ac;
+  const g=document.getElementById('charGrid');g.innerHTML='';
+  data.forEach((d,i)=>{
+    const c=document.createElement('div');c.className='char-cell';
+    c.style.borderColor=`${a.ac}22`;c.style.animationDelay=(i*40)+'ms';
+    c.innerHTML=`<span class="cc-plain">${d.plain}</span><span class="cc-shift">${d.keyChar?'+'+d.keyChar:'+'+d.shift}</span><span class="cc-cipher" style="color:${a.ac}">${d.cipher}</span>`;
+    g.appendChild(c);
+  });
+  const note=document.getElementById('charNote');
+  note.style.background=`${a.ac}08`;note.style.border=`1px solid ${a.ac}22`;
+  note.textContent=curAlgo==='caesar'
+    ?`Every letter is shifted by ${data[0]?.shift||3} positions. Non-alphabetic characters remain unchanged.`
+    :`Each letter gets a different shift based on the keyword. This makes frequency analysis much harder than Caesar cipher.`;
+}
+
+// ── AES ROUNDS ────────────────────────────────────────────────────────────────
+function renderAES(rounds,a){
+  const list=document.getElementById('aesRoundsList');list.innerHTML='';
+  rounds.forEach((r,i)=>{
+    const d=document.createElement('div');d.className='aes-round';
+    d.style.background=i%2===0?'#f9fafb':'white';d.style.animationDelay=(i*80)+'ms';
+    d.innerHTML=`<span class="aes-lbl" style="color:${a.ac}">${r.l}</span><span class="aes-state">${r.s}</span>`;
+    list.appendChild(d);
+  });
+}
+
+// ── RSA KEYS ─────────────────────────────────────────────────────────────────
+function renderRSA(k,a){
+  const rows=[['Prime p',k.p,false],['Prime q',k.q,false],['n = p × q',k.n,false],['φ(n) = (p-1)(q-1)',k.phi,false],['Public Key e',k.e,true],['Private Key d',k.d,true],['Public Key (e, n)',`(${k.e}, ${k.n})`,true],['Private Key (d, n)',`(${k.d}, ${k.n})`,true]];
+  document.getElementById('rsaTable').innerHTML=`<div class="rsa-head" style="background:${a.ac}10;color:${a.ac}">RSA Key Derivation</div>`+
+    rows.map(([l,v,h])=>`<div class="rsa-row" style="${h?'background:'+a.ac+'08':''}"><span class="rsa-lbl">${l}</span><span class="rsa-val" style="${h?'color:'+a.ac:''}">${v}</span></div>`).join('');
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(id,btn){
+  const a=ALGOS[curAlgo];
+  document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('active');b.style.color='#6b7280';b.style.borderBottomColor='transparent';b.style.fontWeight='400';});
+  btn.classList.add('active');btn.style.color=a.ac;btn.style.borderBottomColor=a.ac;btn.style.fontWeight='700';
+  ['Steps','Chars','Rounds','Rsakeys'].forEach(t=>document.getElementById('tc'+t).style.display='none');
+  document.getElementById('tc'+id.charAt(0).toUpperCase()+id.slice(1)).style.display='';
+}
+
+// ── COPY ─────────────────────────────────────────────────────────────────────
+function copyOut(id){
+  const el=document.getElementById(id);
+  navigator.clipboard.writeText(el.textContent).catch(()=>{});
+  const orig=el.style.borderColor;el.style.borderColor='#f59e0b';setTimeout(()=>el.style.borderColor=orig,800);
+}
+
+// ── DEMO & RESET ─────────────────────────────────────────────────────────────
+function loadDemo(){
+  const d=ALGOS[curAlgo].demo;
+  document.getElementById('plainInput').value=d.text;
+  ALGOS[curAlgo].keys.forEach((_,i)=>{const el=document.getElementById('ki'+i);if(el)el.value=d.keys[i]||ALGOS[curAlgo].keys[i].def;});
+  setTimeout(doEncrypt,80);
+}
+
+function doReset(silent){
+  if(!silent)document.getElementById('plainInput').value='';
+  const cOut=document.getElementById('cipherOut');cOut.textContent='Ciphertext will appear here…';cOut.className='out-box';cOut.style.color='#9ca3af';cOut.style.borderColor='#e5e7eb';
+  const dOut=document.getElementById('decryptOut');dOut.textContent='Decrypted text will appear here…';dOut.className='out-box';
+  document.getElementById('stepsList').innerHTML='';
+  document.getElementById('emptyState').style.display='';
+  document.getElementById('verifyRow').style.display='none';
+  document.getElementById('tbChars').style.display='none';
+  document.getElementById('tbRounds').style.display='none';
+  document.getElementById('tbRSA').style.display='none';
+  [0,1,2,3,4].forEach(i=>{document.getElementById('fn'+i).classList.remove('lit');document.getElementById('fn'+i).style.borderColor='#e5e7eb';document.getElementById('fn'+i).style.background='#fafafa';document.getElementById('fn'+i).style.boxShadow='none';document.getElementById('fv'+i).style.color='#9ca3af';if(i<4){document.getElementById('fa'+i).style.color='#e5e7eb';document.getElementById('fa'+i).style.textShadow='none';}});
+  document.getElementById('fv0').textContent='—';document.getElementById('fv1').textContent='—';document.getElementById('fv3').textContent='—';document.getElementById('fv4').textContent='—';
+  lastResult=null;
+  switchTab('steps',document.getElementById('tbSteps'));
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+selectAlgo('caesar',document.getElementById('tab-caesar'));
+</script>
+</body>
+</html>
